@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>ADD</title>
+    <style>
+        .modal-container {
+            background-color: #fff;
+            border: 1px solid grey;
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h3>Board Add</h3>
+    <!-- Board Add Form -->
+    <form action="/board/add" method="post">
+        <input type="text" name="title" placeholder="title" />
+        <input type="text" name="writer" placeholder="writer" />
+        <textarea name="content"></textarea>
+        <button type="button" class="btn-open">OPEN</button>
+        <button type="submit" class="btn-add">ADD</button>
+    </form>
+    <!-- BoardImage Modal -->
+    <div class="modal-container">
+        <div class="modal-content">
+            <h3>BoardImage Upload</h3>
+            <input type="file" name="files" multiple />
+            <button type="button" class="btn-upload">UPLOAD</button>
+            <button type="button" class="btn-close">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- Javascript -->
+    <script>
+        // BoardImage Modal Open
+        const btnOpen = document.querySelector('.btn-open');
+        btnOpen.addEventListener('click', () => {
+            const modal = document.querySelector('.modal-container');
+            modal.style.display = 'block';
+        });
+
+        // BoardImage Modal Close
+        const btnClose = document.querySelector('.btn-close');
+        btnClose.addEventListener('click', () => {
+            const modal = document.querySelector('.modal-container');
+            modal.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
