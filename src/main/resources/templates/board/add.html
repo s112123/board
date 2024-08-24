@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>ADD</title>
@@ -24,7 +25,12 @@
         <button type="button" class="btn-open">OPEN</button>
         <button type="submit" class="btn-add">ADD</button>
     </form>
+    <!-- Uploaded BoardImage Preview -->
+    <div class="preview-upload-image"></div>
     <!-- BoardImage Modal -->
+    <!-- UPLOAD 버튼을 누르면 게시물을 DB에 등록하지 않고 먼저 서버에 이미지 파일을 저장하고 미리보기로 보여준다 -->
+    <!-- 이번 로직에서 첨부파일은 DB에 게시물이 완전히 등록되기 전에 서버에 저장을 하고 사용자가 삭제하면 서버에서 삭제한다 -->
+    <!-- 등록 작업 중에 에러로 등록에 실패하면 서버에 저장된 파일을 삭제할 수 있는 로직이 있어야 된다 (현재 구현에는 없음) -->
     <div class="modal-container">
         <div class="modal-content">
             <h3>BoardImage Upload</h3>
@@ -35,7 +41,19 @@
     </div>
 
     <!-- Javascript -->
-    <script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/upload.js"></script>
+    <script th:inline="javascript">
+        // @Valid 검증에서 에러 발생시 전달된 bindingResult의 'errors' 메시지 호출
+        const errors = [[${errors}]];
+        if (errors) {
+            let errorMessage = '';
+            for (let i = 0; i < errors.length; i++) {
+                errorMessage += `${errors[i].field}: ${errors[i].code}\n`;
+            }
+            console.log(errorMessage);
+        }
+
         // BoardImage Modal Open
         const btnOpen = document.querySelector('.btn-open');
         btnOpen.addEventListener('click', () => {
@@ -49,6 +67,41 @@
             const modal = document.querySelector('.modal-container');
             modal.style.display = 'none';
         });
+
+        // Upload BoardImage
+        const btnUpload = document.querySelector('.btn-upload');
+        btnUpload.addEventListener('click', () => {
+            // FormData 객체를 이용해서 파일 정보들을 추가한다
+            const formData = new FormData();
+            const uploadFiles = document.querySelector('input[name="files"]');
+            const files = uploadFiles.files;
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+
+            // Axios를 통해 파일을 서버에 저장한다
+            uploadToServer(formData).then(response => {
+                // 응답 받은 fileInfoDtos로 이미지 파일은 썸네일로 보여준다
+                for (const file of response.data) {
+                    showPreviewImage(file);
+                }
+                // 파일 업로드 모달 닫기
+                const modal = document.querySelector('.modal-container');
+                modal.style.display = 'none';
+            })
+        });
+
+        // Preview Uploaded BoardImage
+        const preview = document.querySelector('.preview-upload-image');
+        function showPreviewImage({uuid, fileName, link}) {
+            let html = ``;
+            html += `<div>`;
+            html += `<p><img src="/files/view/${link}" data-src="${uuid + "_" + fileName}" /></p>`;
+            html += `<span>${fileName}</span>`;
+            html += `<button type="button" onclick="javascript:removeFile('${uuid}', '${fileName}', this)">x</button>`;
+            html += `</div>`;
+            preview.innerHTML += html;
+        }
     </script>
 </body>
 </html>
