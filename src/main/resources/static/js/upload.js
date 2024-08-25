@@ -10,3 +10,9 @@ async function uploadToServer(formData) {
     });
     return response;
 }
+
+// 서버에서 이미지 파일 삭제
+async function removeFileFromServer(uuid, fileName) {
+    const response = await axios.delete(`/files/remove/${uuid}_${fileName}`);
+    return response;
+}

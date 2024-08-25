@@ -22,6 +22,8 @@
         <input type="text" name="title" placeholder="title" />
         <input type="text" name="writer" placeholder="writer" />
         <textarea name="content"></textarea>
+        <!-- 게시물을 등록할 때, 첨부된 파일 목록 <input type="hidden" name="fileNames" /> 요소 생성 -->
+        <span class="upload_hidden"></span>
         <button type="button" class="btn-open">OPEN</button>
         <button type="submit" class="btn-add">ADD</button>
     </form>
@@ -95,13 +97,45 @@
         const preview = document.querySelector('.preview-upload-image');
         function showPreviewImage({uuid, fileName, link}) {
             let html = ``;
-            html += `<div>`;
-            html += `<p><img src="/files/view/${link}" data-src="${uuid + "_" + fileName}" /></p>`;
+            html += `<div class="thumbnail">`;
+            html += `<p><img src="/files/view/${link}" data-file-name="${uuid + "_" + fileName}" /></p>`;
             html += `<span>${fileName}</span>`;
             html += `<button type="button" onclick="javascript:removeFile('${uuid}', '${fileName}', this)">x</button>`;
             html += `</div>`;
             preview.innerHTML += html;
         }
+
+        // Delete BoardImage Thumbnail
+        function removeFile(uuid, fileName, htmlElement) {
+            const target = htmlElement.closest('.thumbnail');
+            removeFileFromServer(uuid, fileName).then(response => {
+                // 썸네일올 표시하는 HTML 요소 삭제
+                target.remove();
+            });
+        }
+
+        // Register Board
+        const btnAdd = document.querySelector('.btn-add');
+        btnAdd.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // <form>을 전송하기 전에 첨부된 파일 이름의 <input> 요소를 추가한다
+            const uploadImages = preview.querySelectorAll('img');
+            let html = '';
+            for (let i = 0; i < uploadImages.length; i++) {
+                const uploadImage = uploadImages[i];
+                const fileName = uploadImage.getAttribute('data-file-name');
+                html += `<input type="hidden" name="fileNames" value="${fileName}" />`;
+            }
+            const target = document.querySelector('.upload_hidden');
+            target.innerHTML += html;
+
+            // Board 등록
+            const form = document.querySelector('form');
+            form.submit();
+            form.reset();
+        }, false);
     </script>
 </body>
 </html>

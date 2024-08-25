@@ -15,12 +15,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public Long addBoard(BoardDto boardDto) {
         // DTO → Entity
-        Board board = Board.builder()
-                .id(boardDto.getId())
-                .title(boardDto.getTitle())
-                .content(boardDto.getContent())
-                .writer(boardDto.getWriter())
-                .build();
+        Board board = boardDtoToBoard(boardDto);
         return boardRepository.save(board).getId();
     }
 }

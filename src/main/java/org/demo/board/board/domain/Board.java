@@ -15,7 +15,7 @@ import java.util.Set;
 @Getter
 @Builder
 @ToString
-public class Board {
+public class Board extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,16 +30,17 @@ public class Board {
 
     // Board (1) - (*) BoardImage 양방향
     // CascadeType.ALL → Board 엔티티의 상태 변화에 따라 BoardImage 엔티티도 함께 변경
-    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "board", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<BoardImage> boardImages = new HashSet<>();
 
     // 양방향 관계인 경우, 참조 객체의 관계가 서로 일치하도록 해야 한다
-    // Board 엔티티를 저장할 때, boardImages에 BoardImage를 저장하고 BoardImage 엔티티에 Board를 저장한다
-    public void addBoardImage(BoardImage image) {
+    // Board 엔티티를 저장할 때, boardImages 변수에 BoardImage를 저장하고 BoardImage 엔티티에 Board를 저장한다
+    public void addBoardImage(String uuid, String filename) {
         BoardImage boardImage = BoardImage.builder()
-                .fileIndex(image.getFileIndex())
-                .fileName(image.getFileName())
+                .uuid(uuid)
+                .fileIndex(boardImages.size())
+                .fileName(filename)
                 .board(this)
                 .build();
         boardImages.add(boardImage);

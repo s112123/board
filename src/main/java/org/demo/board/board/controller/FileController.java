@@ -1,22 +1,26 @@
 package org.demo.board.board.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import net.coobird.thumbnailator.Thumbnailator;
 import org.demo.board.board.dto.FileDto;
 import org.demo.board.board.dto.FileInfoDto;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 
+@Slf4j
 @RestController
 @RequestMapping("/files")
 public class FileController {
@@ -41,20 +45,71 @@ public class FileController {
                 try {
                     // 파일을 서버에 저장
                     multipartFile.transferTo(filePath);
+
+                    // 파일이 이미지일 때는 썸네일 파일도 저장
+                    if (Files.probeContentType(filePath).startsWith("image")) {
+                        isImage = true;
+
+                        // 썸네일 파일 이름은 원래 파일 이름 앞에 "s_" 로 시작하도록 구성
+                        File thumbnail = new File(uploadDirPath, "s_" + uuid + "_" + originalFileName);
+                        Thumbnailator.createThumbnail(filePath.toFile(), thumbnail, 200, 200);
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
                 // 파일 정보를 FileIntoDtos에 저장
-                fileInfoDtos.add(FileInfoDto.builder()
-                        .uuid(uuid)
-                        .fileName(originalFileName)
-                        .isImage(isImage)
-                        .build()
+                fileInfoDtos.add(
+                        FileInfoDto.builder()
+                                .uuid(uuid)
+                                .fileName(originalFileName)
+                                .isImage(isImage)
+                                .build()
                 );
             });
             return fileInfoDtos;
         }
         return null;
+    }
+
+    // 썸네일 이미지 조회
+    @GetMapping("/view/{fileName}")
+    public ResponseEntity<Resource> viewThumbnail(@PathVariable("fileName") String fileName) {
+        Resource resource = new FileSystemResource(uploadDirPath + File.separator + fileName);
+        HttpHeaders headers = new HttpHeaders();
+
+        try {
+            // resource.getFile().toPath() → D:\\upload\\s_1a7d89e3-e32b-486a-bcf9-478ca29cd6a2_lenna1.png
+            headers.add("Content-Type", Files.probeContentType(resource.getFile().toPath()));
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+
+        return ResponseEntity.ok().headers(headers).body(resource);
+    }
+
+    // 첨부한 이미지 파일 삭제
+    @DeleteMapping("/remove/{fileName}")
+    public Map<String, Boolean> removeFile(@PathVariable("fileName") String fileName) {
+        Resource resource = new FileSystemResource(uploadDirPath + File.separator + fileName);
+        Map<String, Boolean> responseBody = new HashMap<>();
+        boolean removed = false;
+
+        try {
+            String contentType = Files.probeContentType(resource.getFile().toPath());
+            log.info("contentType={}", contentType);
+            removed = resource.getFile().delete();
+
+            // 파일이 이미지라서 썸네일이 존재한다면 썸네일도 삭제
+            if (contentType.startsWith("image")) {
+                File thumbnail = new File(uploadDirPath + File.separator + "s_" + fileName);
+                thumbnail.delete();
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+
+        responseBody.put("result", removed);
+        return responseBody;
     }
 }
