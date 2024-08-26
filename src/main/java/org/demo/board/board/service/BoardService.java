@@ -3,11 +3,18 @@ package org.demo.board.board.service;
 import org.demo.board.board.domain.Board;
 import org.demo.board.board.domain.BoardImage;
 import org.demo.board.board.dto.BoardDto;
+import org.demo.board.board.dto.PageRequestDto;
+import org.demo.board.board.dto.PageResponseDto;
+
+import java.util.List;
 
 public interface BoardService {
 
     // 등록하기
     Long addBoard(BoardDto boardDto);
+
+    // 목록조회
+    PageResponseDto<BoardDto> getBoards(PageRequestDto pageRequestDto);
 
     // DTO → Entity (BoardDto → Board)
     // ModelMapper는 단순한 구조의 객체를 다른 타입의 객체로 만드는데 편리하지만 다양한 처리가 힘들다

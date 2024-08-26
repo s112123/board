@@ -1,10 +1,122 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>LIST</title>
+    <style>
+        .modal-container {
+            background-color: #fff;
+            border: 1px solid grey;
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            display: none;
+        }
+  </style>
 </head>
 <body>
     <h3>Board List</h3>
+    <!-- 목록 -->
+    <table>
+        <thead>
+        <tr>
+            <td>id</td>
+            <td>title</td>
+            <td>content</td>
+            <td>writer</td>
+            <td>reg_date</td>
+        </tr>
+        </thead>
+        <!-- th:with를 이용해서 PageRequestDto의 getLink()를 활용하여 버튼에 필요한 링크를 변수로 저장한다 -->
+        <!-- link = page=1&size=10&type=t&keyword=a -->
+        <tbody th:with="link = ${pageRequestDto.getLink()}">
+        <tr th:each="board : ${boards.boardDtos}">
+            <td>[[${board.id}]]</td>
+            <td><a th:href="|@{/board/read(id=${board.id})}&${link}|">[[${board.title}]]</a></td>
+            <td>[[${board.content}]]</td>
+            <td>[[${board.writer}]]</td>
+            <td>[[${#temporals.format(board.regDate, 'yyyy-MM-dd HH:mm:ss')}]]</td>
+        </tr>
+        </tbody>
+    </table>
+    <!-- 페이지네이션 -->
+    <ul class="pagination">
+        <li th:if="${boards.prev}"><a th:data-num="${boards.start - 1}">Prev</a></li>
+        <!-- 특정범위의 숫자를 만들기 위해 thymeleaf 의 number.sequence() 이용 -->
+        <th:block th:each="num : ${#numbers.sequence(boards.start, boards.end)}">
+        <li th:class="${boards.page == num} ? 'active' : ''"><a th:data-num="${num}">[[${num}]]</a></li>
+        </th:block>
+        <li th:if="${boards.next}"><a th:data-num="${boards.end + 1}">Next</a></li>
+    </ul>
+    <!-- 검색 -->
+    <form action="/board/list" method="get">
+        <!-- 요청할 때, 사용된 PageRequestDto는 응답에서 사용하면 동일한 객체이다 -->
+        <!-- 페이지 사이즈 -->
+        <input type="hidden" name="size" th:value="${pageRequestDto.size}" />
+        <!-- 검색 조건 -->
+        <select name="type">
+            <option value="t" th:selected="${pageRequestDto.type == 't'}">제목</option>
+            <option value="c" th:selected="${pageRequestDto.type == 'c'}">내용</option>
+            <option value="w" th:selected="${pageRequestDto.type == 'w'}">작성자</option>
+            <option value="tc" th:selected="${pageRequestDto.type == 'tc'}">제목+내용</option>
+            <option value="tcw" th:selected="${pageRequestDto.type == 'tcw'}">제목+내용+작성자</option>
+        </select>
+        <!-- 검색어 입력 -->
+        <input type="text" name="keyword" th:value="${pageRequestDto.keyword}" />
+        <button type="submit">SEARCH</button>
+        <button type="button" class="btn-clear">CLEAR</button>
+    </form>
+    <!-- 등록 완료 모달 -->
+    <div class="modal-container">
+        <div class="modal-content">
+            <h3>글이 등록되었습니다</h3>
+            <button type="button" class="btn-close">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- Javascript -->
+    <script th:inline="javascript">
+        // 글을 등록 후, 목록 페이지로 왔을 때 등록 완료 모달이 보이고 바로 목록 페이지로 접속하면 모달이 나오지 않는다
+        const result = [[${id}]];
+        if (result) {
+            const modal = document.querySelector('.modal-container');
+            modal.style.display = 'block';
+        }
+
+        // 모달 닫기
+        const btnClose = document.querySelector('.btn-close');
+        btnClose.addEventListener('click', () => {
+            const modal = document.querySelector('.modal-container');
+            modal.style.display = 'none';
+        });
+
+        // 페이지 버튼을 누른 경우
+        const pagination = document.querySelector('.pagination');
+        pagination.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // <ul class="pagination"> 안에서 클릭한 요소가 <a> 태그가 아니면 페이지 번호 클릭이 아니다
+            const target = e.target;
+            if (target.tagName != 'A') {
+                return;
+            }
+
+            // 클릭한 페이지 번호를 서버에 전달하도록 <input> 요소 추가 후, Submit 처리
+            const page = target.getAttribute('data-num');
+            const form = document.querySelector('form');
+            form.innerHTML += `<input type="hidden" name="page" value="${page}" />`;
+            form.submit();
+        }, false);
+
+        // 검색 창에서 CLEAR 버튼을 누른 경우
+        const btnClear = document.querySelector('.btn-clear');
+        btnClear.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            self.location = '/board/list';
+        });
+    </script>
 </body>
 </html>

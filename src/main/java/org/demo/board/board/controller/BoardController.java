@@ -2,14 +2,21 @@ package org.demo.board.board.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.demo.board.board.domain.Board;
 import org.demo.board.board.dto.BoardDto;
+import org.demo.board.board.dto.PageRequestDto;
+import org.demo.board.board.dto.PageResponseDto;
 import org.demo.board.board.service.BoardService;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/board")
@@ -42,7 +49,9 @@ public class BoardController {
 
     // 게시판 목록 페이지
     @GetMapping("/list")
-    public String listBoard() {
+    public String listBoard(PageRequestDto pageRequestDto, Model model) {
+        PageResponseDto<BoardDto> boards = boardService.getBoards(pageRequestDto);
+        model.addAttribute("boards", boards);
         return "board/list";
     }
 }

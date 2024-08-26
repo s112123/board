@@ -11,6 +11,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
+@ToString
 public class BoardDto {
 
     private Long id;
