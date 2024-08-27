@@ -1,6 +1,7 @@
 package org.demo.board.board.dto;
 
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ public class BoardDto {
 
     private Long id;
     @NotEmpty
+    @Size(min = 3, max = 100)
     private String title;
     @NotEmpty
     private String content;

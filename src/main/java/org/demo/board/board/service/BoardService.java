@@ -7,6 +7,7 @@ import org.demo.board.board.dto.PageRequestDto;
 import org.demo.board.board.dto.PageResponseDto;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public interface BoardService {
 
@@ -15,6 +16,9 @@ public interface BoardService {
 
     // 목록조회
     PageResponseDto<BoardDto> getBoards(PageRequestDto pageRequestDto);
+
+    // 조회하기
+    BoardDto getBoard(Long id);
 
     // DTO → Entity (BoardDto → Board)
     // ModelMapper는 단순한 구조의 객체를 다른 타입의 객체로 만드는데 편리하지만 다양한 처리가 힘들다
@@ -36,5 +40,27 @@ public interface BoardService {
         }
 
         return board;
+    }
+
+    // Entity → DTO (Board → BoardDto)
+    default BoardDto boardToBoardDto(Board board) {
+        // DB에서 조회된 Board 객체를 DTO 객체에 저장
+        BoardDto boardDto = BoardDto.builder()
+                .id(board.getId())
+                .title(board.getTitle())
+                .content(board.getContent())
+                .writer(board.getWriter())
+                .regDate(board.getRegDate())
+                .modDate(board.getModDate())
+                .build();
+
+        // BoardDto의 List<String> fileNames에 파일이름 저장
+        List<String> fileNames = board.getBoardImages().stream()
+                .sorted()
+                .map(boardImage -> boardImage.getUuid() + "_" + boardImage.getFileName())
+                .collect(Collectors.toList());
+        boardDto.setFileNames(fileNames);
+
+        return boardDto;
     }
 }

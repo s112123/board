@@ -14,6 +14,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -53,5 +54,14 @@ public class BoardController {
         PageResponseDto<BoardDto> boards = boardService.getBoards(pageRequestDto);
         model.addAttribute("boards", boards);
         return "board/list";
+    }
+
+    // 조회하기
+    // PageRequestDto 매개변수는 Thymeleaf에서 getLink() 함수를 사용하기 위함이다
+    @GetMapping("/read")
+    public String read(@RequestParam("id") Long id, PageRequestDto pageRequestDto, Model model) {
+        BoardDto board = boardService.getBoard(id);
+        model.addAttribute("board", board);
+        return "board/read";
     }
 }

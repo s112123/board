@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,5 +53,14 @@ public class BoardServiceImpl implements BoardService {
                 .boardDtos(boardDtos)
                 .total((int) boards.getTotalElements())
                 .build();
+    }
+
+    @Override
+    public BoardDto getBoard(Long id) {
+        // Entity
+        Board board = boardRepository.findByWithImages(id).orElseThrow();
+        // Entity → DTO
+        BoardDto boardDto = boardToBoardDto(board);
+        return boardDto;
     }
 }
