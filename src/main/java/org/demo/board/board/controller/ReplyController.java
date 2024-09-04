@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-@Slf4j
 @RestController
 @RequestMapping("/replies")
 @RequiredArgsConstructor
@@ -48,7 +47,6 @@ public class ReplyController {
     public PageResponseDto<ReplyDto> getReplies(
             @PathVariable("boardId") Long boardId, PageRequestDto pageRequestDto
     ) {
-        log.info("boardId={}", boardId);
         PageResponseDto<ReplyDto> pageResponseDto = replyService.getReplies(boardId, pageRequestDto);
         return pageResponseDto;
     }

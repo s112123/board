@@ -39,13 +39,13 @@ public class ReplyServiceImpl implements ReplyService {
         Page<Reply> replies = replyRepository.listOfBoard(boardId, pageable);
 
         // ReplyDto로 변환
-        List<ReplyDto> dtoList = replies.getContent().stream()
+        List<ReplyDto> replyDtos = replies.getContent().stream()
                 .map(reply -> modelMapper.map(reply, ReplyDto.class))
                 .collect(Collectors.toList());
 
         return PageResponseDto.<ReplyDto>withAll()
                 .pageRequestDto(pageRequestDto)
-                .boardDtos(dtoList)
+                .dtoList(replyDtos)
                 .total((int) replies.getTotalElements())
                 .build();
     }

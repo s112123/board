@@ -17,6 +17,7 @@
 </head>
 <body>
     <h3>Board List</h3>
+    <p><a href="/">HOME</a></p>
     <!-- 목록 -->
     <table>
         <thead>
@@ -31,7 +32,7 @@
         <!-- th:with를 이용해서 PageRequestDto의 getLink()를 활용하여 버튼에 필요한 링크를 변수로 저장한다 -->
         <!-- link = page=1&size=10&type=t&keyword=a -->
         <tbody th:with="link = ${pageRequestDto.getLink()}">
-        <tr th:each="board : ${boards.boardDtos}">
+        <tr th:each="board : ${boards.dtoList}">
             <td>[[${board.id}]]</td>
             <td><a th:href="|@{/board/read(id=${board.id})}&${link}|">[[${board.title}]]</a></td>
             <td>[[${board.content}]]</td>

@@ -17,11 +17,11 @@ public class PageResponseDto<E> {
     private int end;
     private boolean prev;
     private boolean next;
-    private List<E> boardDtos;
+    private List<E> dtoList;
 
     // 이 생성자로 생성하는 함수를 withAll()로 설정
     @Builder(builderMethodName = "withAll")
-    public PageResponseDto(PageRequestDto pageRequestDto, List<E> boardDtos, int total) {
+    public PageResponseDto(PageRequestDto pageRequestDto, List<E> dtoList, int total) {
         if (total <= 0) {
             return;
         }
@@ -29,7 +29,7 @@ public class PageResponseDto<E> {
         this.page = pageRequestDto.getPage();
         this.size = pageRequestDto.getSize();
         this.total = total;
-        this.boardDtos = boardDtos;
+        this.dtoList = dtoList;
         this.end = (int)(Math.ceil(this.page / 10.0 )) *  10;
         this.start = this.end - 9;
         int last = (int)(Math.ceil((total / (double)size)));

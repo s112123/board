@@ -50,7 +50,7 @@ public class BoardServiceImpl implements BoardService {
         // withAll(): PageResponseDto 생성자의 매개변수에 인수를 할당한다
         return PageResponseDto.<BoardDto>withAll()
                 .pageRequestDto(pageRequestDto)
-                .boardDtos(boardDtos)
+                .dtoList(boardDtos)
                 .total((int) boards.getTotalElements())
                 .build();
     }
