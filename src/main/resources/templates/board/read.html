@@ -36,6 +36,11 @@
     <!-- 댓글 섹션 -->
     <div class="reply-container">
         <button class="btn-reply">REPLY</button>
+        <h3>Reply List</h3>
+        <!-- 댓글 목록 -->
+        <ul class="reply-list"></ul>
+        <!-- 댓글 페이지네이션 -->
+        <ul class="reply-pagination"></ul>
     </div>
     <!-- 댓글 등록 모달 -->
     <div class="modal-container">
@@ -53,6 +58,89 @@
     <script src="/js/reply.js"></script>
     <script th:inline="javascript">
         const boardId = [[${board.id}]];
+
+        // 댓글 목록 출력: 현재 페이지가 열리면 바로 댓글 목록을 호출한다
+        // 댓글의 마지막 페이지를 바로 보고 싶다면 getReplies(1, 10, true)
+        getReplies(1, 10);
+
+        // 현재 페이지가 로딩되면 댓글 목록을 호출 (Axios)
+        function getReplies(page, size, goLast) {
+            getList({boardId, page, size, goLast}).then(response => {
+                // 댓글 목록을 DOM에 출력
+                printReplies(response.dtoList);
+                // 댓글 페이지 번호를 DOM에 출력
+                printPagination(response);
+            })
+            .catch(e => {
+                console.error(e);
+            });
+        }
+
+        // 댓글 목록을 DOM에 출력
+        const replyList = document.querySelector('.reply-list');
+        function printReplies(dtoList) {
+            let str = '';
+            if (dtoList && dtoList.length > 0) {
+                for (const dto of dtoList) {
+                    str += '<li class="reply-item">';
+                    str += `  <span>${dto.id}</span>`;
+                    str += `  <span data-rno="${dto.id}">${dto.text}</span>`;
+                    str += `  <span>${dto.writer}</span>`;
+                    str += `  <span>${dto.regDate}</span>`;
+                    str += '</li>';
+                }
+            }
+            replyList.innerHTML = str;
+        }
+
+        // 댓글의 페이지 번호 목록을 댓글 페이지번호 DOM에 출력
+        const replyPagination = document.querySelector('.reply-pagination');
+        function printPagination(data) {
+            let pageStr = '';
+
+            // 이전 버튼
+            if (data.prev) {
+                pageStr += `<li>`;
+                pageStr += `  <a data-page="${data.start - 1}">prev</a>`;
+                pageStr += `</li>`;
+            }
+            // 페이지 번호 목록
+            for (let i = data.start; i <= data.end; i++) {
+                pageStr += `<li class="${i == data.page ? "active" : ""}">`;
+                pageStr += `  <a data-page="${i}">${i}</a>`;
+                pageStr += `</li>`;
+            }
+            // 다음 버튼
+            if (data.next) {
+                pageStr += `<li>`;
+                pageStr += `  <a data-page="${data.end + 1}">next</a>`;
+                pageStr += `</li>`;
+            }
+
+            replyPagination.innerHTML = pageStr;
+        }
+
+        // 댓글 번호를 누르면 해당 댓글 페이지로 이동
+        // page와 size를 별도의 변수로 처리한 것은 댓글 수정과 같은 작업에서 현재 페이지 번호를 유지해야 하기 때문이다
+        let page = 1;
+        let size = 10;
+
+        // 페이지 번호는 매번 새로이 번호를 구성하므로 이벤트를 처리할 때는 항상 고정되어 있는 <ul>을 대상으로 처리
+        replyPagination.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const target = e.target;
+            if (target.tagName != 'A') {
+                return;
+            }
+
+            const pageNum = target.getAttribute('data-page');
+            page = pageNum;
+
+            // 댓글 목록 재호출
+            getReplies(page, size);
+        }, false);
 
         // 댓글 등록 모달 열기
         const btnReply = document.querySelector('.btn-reply');
@@ -94,7 +182,7 @@
                 replyWriter.value = '';
 
                 // 댓글 목록 갱신
-                // getReplies(1, 10);
+                getReplies(1, 10);
             })
             .catch(e => {
                 console.log('exception');

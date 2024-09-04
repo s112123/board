@@ -3,20 +3,20 @@ package org.demo.board.board.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.demo.board.board.dto.PageRequestDto;
+import org.demo.board.board.dto.PageResponseDto;
 import org.demo.board.board.dto.ReplyDto;
 import org.demo.board.board.service.ReplyService;
 import org.springframework.http.MediaType;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
 
+@Slf4j
 @RestController
 @RequestMapping("/replies")
 @RequiredArgsConstructor
@@ -41,5 +41,15 @@ public class ReplyController {
 
         // 메소드 리턴값에 문제가 있다면 @RestControllerAdvice가 처리할 것이므로 정상적인 결과만 리턴
         return map;
+    }
+
+    // 목록조회
+    @GetMapping("/list/{boardId}")
+    public PageResponseDto<ReplyDto> getReplies(
+            @PathVariable("boardId") Long boardId, PageRequestDto pageRequestDto
+    ) {
+        log.info("boardId={}", boardId);
+        PageResponseDto<ReplyDto> pageResponseDto = replyService.getReplies(boardId, pageRequestDto);
+        return pageResponseDto;
     }
 }
