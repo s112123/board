@@ -4,6 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <title>READ</title>
+    <style>
+        .modal-container {
+            background-color: #fff;
+            border: 1px solid grey;
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <h3>Board Read</h3>
@@ -23,5 +33,73 @@
     <div th:if="${board.fileNames != null && board.fileNames.size() > 0}">
         <img th:each="fileName : ${board.fileNames}" th:src="|/files/view/${fileName}|" />
     </div>
+    <!-- 댓글 섹션 -->
+    <div class="reply-container">
+        <button class="btn-reply">REPLY</button>
+    </div>
+    <!-- 댓글 등록 모달 -->
+    <div class="modal-container">
+        <div class="modal-content">
+            <h3>Reply Register</h3>
+            <input type="text" class="reply-text" placeholder="reply-text" />
+            <input type="text" class="reply-writer" placeholder="reply-writer" />
+            <button type="button" class="btn-register">REGISTER</button>
+            <button type="button" class="btn-close">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- Javascript -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/reply.js"></script>
+    <script th:inline="javascript">
+        const boardId = [[${board.id}]];
+
+        // 댓글 등록 모달 열기
+        const btnReply = document.querySelector('.btn-reply');
+        btnReply.addEventListener('click', (e) => {
+            const modal = document.querySelector('.modal-container');
+            modal.style.display = 'block';
+        }, false);
+
+        // 댓글 등록 모달 닫기
+        const btnClose = document.querySelector('.btn-close');
+        btnClose.addEventListener('click', (e) => {
+            const modal = document.querySelector('.modal-container');
+            modal.style.display = 'none';
+        }, false);
+
+        // 댓글 등록
+        // [REGISTER] 버튼을 눌렀을 때, reply.js의 addReply()를 호출하고 메세지창을 통해서 추가된 댓글의 번호를 보여줌
+        // 메시지창이 닫히면 댓글의 마지막 페이지를 다시 호출해서 등록된 댓글이 화면에 보일 수 있도록 구성
+        const btnRegister = document.querySelector('.btn-register');
+        const replyText = document.querySelector('.reply-text');
+        const replyWriter = document.querySelector('.reply-writer');
+        btnRegister.addEventListener('click', function (e) {
+            const data = {
+                boardId: boardId,
+                text: replyText.value,
+                writer: replyWriter.value
+            };
+
+            addReply(data).then(response => {
+                // 등록된 댓글의 id 출력
+                alert('등록 댓글 id: ' + response.data.id);
+
+                // 댓글 등록 모달 닫기
+                const modal = document.querySelector('.modal-container');
+                modal.style.display = 'none';
+
+                // 댓글 작성란 초기화
+                replyText.value = '';
+                replyWriter.value = '';
+
+                // 댓글 목록 갱신
+                // getReplies(1, 10);
+            })
+            .catch(e => {
+                console.log('exception');
+            });
+        }, false);
+    </script>
 </body>
 </html>
