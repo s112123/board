@@ -50,4 +50,14 @@ public class ReplyController {
         PageResponseDto<ReplyDto> pageResponseDto = replyService.getReplies(boardId, pageRequestDto);
         return pageResponseDto;
     }
+
+    // 조회하기
+    // 댓글 번호가 없는 번호로 조회가 되면 500에러가 발생한다
+    // 서비스 계층에서 조회시 Optional<T>를 이용했고 orElseThrow()를 이용했기 때문에 컨트롤러에 예외가 전달된다
+    // NoSuchElementExcpetion 예외를 처리하기 위해 CustomRestAdvice 클래스를 이용해서 예외처리를 추가해준다
+    @GetMapping("/{id}")
+    public ReplyDto getReply(@PathVariable("id") Long id) {
+        ReplyDto replyDto = replyService.read(id);
+        return replyDto;
+    }
 }

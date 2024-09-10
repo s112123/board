@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <title>READ</title>
     <style>
-        .modal-container {
+        .modal-container, .modal-read-container {
             background-color: #fff;
             border: 1px solid grey;
             position: fixed;
@@ -52,12 +52,64 @@
             <button type="button" class="btn-close">CLOSE</button>
         </div>
     </div>
+    <!-- 댓글 조회 모달 -->
+    <div class="modal-read-container">
+        <div class="modal-read-content">
+            <h3>Reply Read</h3>
+            <h5 class="reply-header"></h5>
+            <input type="text" class="modify-reply-text" placeholder="reply-text" />
+            <button type="button" class="btn-modify-reply">MODIFY</button>
+            <button type="button" class="btn-remove-reply">REMOVE</button>
+            <button type="button" class="btn-close-reply">CLOSE</button>
+        </div>
+    </div>
 
     <!-- Javascript -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="/js/reply.js"></script>
     <script th:inline="javascript">
         const boardId = [[${board.id}]];
+        const replies = document.querySelector('.reply-list');
+
+        // 댓글 조회
+        // 특정 댓글을 눌렀을 때, 댓글 정보 모달 창을 보여준다
+        // 댓글 목록도 매번 새롭게 구성하므로 이벤트를 처리할 때는 항상 존재하는 바깥쪽 <ul>을 대상으로 처리
+        const replyHeader = document.querySelector('.reply-header');
+        const modifyReplyText = document.querySelector('.modify-reply-text');
+        replies.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // 현재 댓글 목록이 <span>으로 만들어져 있다
+            const target = e.target;
+            if (!target || target.tagName != 'SPAN') {
+                return;
+            }
+
+            // 댓글 내용 <span>에는 <span data-reply-id="1"> 가 입력되어 있다
+            // 만약, <span>을 눌렀지만 data-reply-id 값이 없다면 코드를 종료한다
+            const replyId = target.getAttribute('data-reply-id');
+            if (!replyId) {
+                return;
+            }
+
+            // 댓글의 내용을 모달창에 채워서 보내줌
+            getReply(replyId).then(response => {
+                replyHeader.innerHTML = response.data.id;
+                modifyReplyText.value = response.data.text;
+
+                // 댓글 정보 모달창 열기
+                const readModal = document.querySelector('.modal-read-container');
+                readModal.style.display = 'block';
+            });
+        }, false);
+
+        // 댓글 정보 모달창 닫기
+        const btnCloseReply = document.querySelector('.btn-close-reply');
+        btnCloseReply.addEventListener('click', function () {
+            const readModal = document.querySelector('.modal-read-container');
+            readModal.style.display = 'none';
+        });
 
         // 댓글 목록 출력: 현재 페이지가 열리면 바로 댓글 목록을 호출한다
         // 댓글의 마지막 페이지를 바로 보고 싶다면 getReplies(1, 10, true)
@@ -84,7 +136,7 @@
                 for (const dto of dtoList) {
                     str += '<li class="reply-item">';
                     str += `  <span>${dto.id}</span>`;
-                    str += `  <span data-rno="${dto.id}">${dto.text}</span>`;
+                    str += `  <span data-reply-id="${dto.id}">${dto.text}</span>`;
                     str += `  <span>${dto.writer}</span>`;
                     str += `  <span>${dto.regDate}</span>`;
                     str += '</li>';

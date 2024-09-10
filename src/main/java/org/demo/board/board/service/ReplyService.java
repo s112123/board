@@ -11,4 +11,7 @@ public interface ReplyService {
 
     // 리플 목록조회
     PageResponseDto<ReplyDto> getReplies(Long boardId, PageRequestDto pageRequestDto);
+
+    // 리플 조회하기
+    ReplyDto read(Long id);
 }

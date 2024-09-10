@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,5 +49,12 @@ public class ReplyServiceImpl implements ReplyService {
                 .dtoList(replyDtos)
                 .total((int) replies.getTotalElements())
                 .build();
+    }
+
+    @Override
+    public ReplyDto read(Long id) {
+        Optional<Reply> optional = replyRepository.findById(id);
+        Reply reply = optional.orElseThrow();
+        return modelMapper.map(reply, ReplyDto.class);
     }
 }

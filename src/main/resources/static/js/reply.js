@@ -30,3 +30,9 @@ async function getList({boardId, page, size, goLast}) {
     }
     return response.data;
 }
+
+// 댓글 조회
+async function getReply(replyId) {
+    const response = await axios.get(`/replies/${replyId}`);
+    return response;
+}
