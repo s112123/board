@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.demo.board.board.domain.Board;
 import org.demo.board.board.dto.BoardDto;
+import org.demo.board.board.dto.BoardListReplyCountDto;
 import org.demo.board.board.dto.PageRequestDto;
 import org.demo.board.board.dto.PageResponseDto;
 import org.demo.board.board.repository.BoardRepository;
@@ -23,7 +24,6 @@ import java.util.stream.Collectors;
 public class BoardServiceImpl implements BoardService {
 
     private final BoardRepository boardRepository;
-    private final ModelMapper modelMapper;
 
     @Override
     public Long addBoard(BoardDto boardDto) {
@@ -33,25 +33,21 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public PageResponseDto<BoardDto> getBoards(PageRequestDto pageRequestDto) {
+    public PageResponseDto<BoardListReplyCountDto> getBoards(PageRequestDto pageRequestDto) {
         // 검색조건
         String[] types = pageRequestDto.getTypes();
         String keyword = pageRequestDto.getKeyword();
 
         // board_id를 기준으로 내림차순 정렬하는 Pageable 생성
         Pageable pageable = pageRequestDto.getPageable("id");
-        Page<Board> boards = boardRepository.searchAll(types, keyword, pageable);
-        // Entity → DTO
-        List<BoardDto> boardDtos = boards.stream()
-                .map(board -> modelMapper.map(board, BoardDto.class))
-                .collect(Collectors.toList());
+        Page<BoardListReplyCountDto> boardDtos = boardRepository.searchAll(types, keyword, pageable);
 
-        // BoardDto → PageResponseDto<E>
+        // BoardListReplyCountDto → PageResponseDto<E>
         // withAll(): PageResponseDto 생성자의 매개변수에 인수를 할당한다
-        return PageResponseDto.<BoardDto>withAll()
+        return PageResponseDto.<BoardListReplyCountDto>withAll()
                 .pageRequestDto(pageRequestDto)
-                .dtoList(boardDtos)
-                .total((int) boards.getTotalElements())
+                .dtoList(boardDtos.getContent())
+                .total((int) boardDtos.getTotalElements())
                 .build();
     }
 

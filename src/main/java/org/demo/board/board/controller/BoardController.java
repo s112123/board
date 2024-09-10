@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.demo.board.board.domain.Board;
 import org.demo.board.board.dto.BoardDto;
+import org.demo.board.board.dto.BoardListReplyCountDto;
 import org.demo.board.board.dto.PageRequestDto;
 import org.demo.board.board.dto.PageResponseDto;
 import org.demo.board.board.service.BoardService;
@@ -51,7 +52,7 @@ public class BoardController {
     // 게시판 목록 페이지
     @GetMapping("/list")
     public String listBoard(PageRequestDto pageRequestDto, Model model) {
-        PageResponseDto<BoardDto> boards = boardService.getBoards(pageRequestDto);
+        PageResponseDto<BoardListReplyCountDto> boards = boardService.getBoards(pageRequestDto);
         model.addAttribute("boards", boards);
         return "board/list";
     }
