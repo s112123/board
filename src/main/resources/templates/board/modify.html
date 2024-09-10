@@ -198,6 +198,39 @@
             html += '</div>';
             uploadImages.innerHTML += html;
         }
+
+        // [REMOVE] 버튼 클릭시, 게시물 삭제 처리
+        const btnRemove = document.querySelector('.btn-remove');
+        btnRemove.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // 화면에 보이는 첨부파일의 <input type="hidden">을 form 태그에 추가
+            appendFileData();
+            // 화면에 안보이도록 처리된 파일들을 form 태그에 추가
+            appendNotShownData();
+
+            form.action = `/board/remove`;
+            form.method = 'post';
+            form.submit();
+        }, false);
+
+        // 화면에서 안보이도록 처리된 파일들을 form 태그에 추가
+        function appendNotShownData() {
+            if (removeFileList.length === 0) {
+                return;
+            }
+
+            const target = document.querySelector('.upload_hidden');
+            let html = '';
+
+            for (let i = 0; i < removeFileList.length; i++) {
+                const {uuid, fileName} = removeFileList[i];
+                html += `<input type="hidden" name="fileNames" value="${uuid}_${fileName}" />`;
+            }
+
+            target.innerHTML += html;
+        }
     </script>
 </body>
 </html>
