@@ -6,6 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.demo.board.board.domain.Board;
 import org.demo.board.board.dto.*;
 import org.demo.board.board.service.BoardService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -15,14 +18,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
+@Slf4j
 @Controller
 @RequestMapping("/board")
 @RequiredArgsConstructor
 public class BoardController {
 
     private final BoardService boardService;
+
+    @Value("${file.upload.dir.path}")
+    private String uploadDir;
 
     // 게시판 등록 페이지
     @GetMapping("/add")
@@ -86,5 +96,48 @@ public class BoardController {
         redirectAttributes.addFlashAttribute("result", "modified");
         redirectAttributes.addAttribute("id", boardDto.getId());
         return "redirect:/board/read";
+    }
+
+    // 삭제하기
+    // 게시물 삭제에는 게시물에 있는 댓글을 먼저 삭제해야만 한다 (참조 무결성)
+    // ReplyRepository에 void deleteByBoard_Bno(Long bno); 삽입한다
+    // 게시물 삭제: replyRepository.deleteByBoard_bno(bno); → boardRepository.deleteById(bno);
+    // 다만, 이런 경우 다른 사용자가 만든 데이터를 삭제하는 것은 문제가 될 수 있으므로 주의할 필요가 있다
+    // 이번 프로젝트에서는 댓글이 달려있지 않은 글만 삭제한다
+    // 댓글이 있는 글을 삭제하면 제약조건에 의해 {"msg":"constraint fails","time":"1698630245271"} 에러가 발생한다
+    @PostMapping("/remove")
+    public String remove(BoardDto boardDto) {
+        Long id = boardDto.getId();
+        boardService.remove(id);
+
+        // 게시물이 삭제되었다면 첨부파일도 삭제
+        List<String> fileNames = boardDto.getFileNames();
+        if (fileNames != null && fileNames.size() > 0) {
+            removeFiles(fileNames);
+        }
+
+        // 삭제 후, 목록으로 이동
+        return "redirect:/board/list";
+    }
+
+    // 게시물 삭제 시, 첨부파일 삭제
+    public void removeFiles(List<String> fileNames) {
+        for (String fileName : fileNames) {
+            Resource resource = new FileSystemResource(uploadDir + File.separator + fileName);
+            String resourceName = resource.getFilename();
+
+            try {
+                String contentType = Files.probeContentType(resource.getFile().toPath());
+                resource.getFile().delete();
+
+                // 썸네일 파일 삭제
+                if (contentType.startsWith("image")) {
+                    File thumbnailFile = new File(uploadDir + File.separator + "s_" + fileName);
+                    thumbnailFile.delete();
+                }
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            }
+        }
     }
 }

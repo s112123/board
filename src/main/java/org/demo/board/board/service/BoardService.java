@@ -21,6 +21,9 @@ public interface BoardService {
     // 수정하기
     void modify(BoardDto boardDto);
 
+    // 삭제하기
+    void remove(Long id);
+
     // DTO → Entity (BoardDto → Board)
     // ModelMapper는 단순한 구조의 객체를 다른 타입의 객체로 만드는데 편리하지만 다양한 처리가 힘들다
     // BoardService 인터페이스에서 DTO와 엔티티를 모두 처리하는 경우가 많으므로 default 메소드로 처리
