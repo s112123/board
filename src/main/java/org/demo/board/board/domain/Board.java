@@ -3,6 +3,7 @@ package org.demo.board.board.domain;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ public class Board extends BaseEntity {
     // Board (1) - (*) BoardImage 양방향
     // CascadeType.ALL → Board 엔티티의 상태 변화에 따라 BoardImage 엔티티도 함께 변경
     @OneToMany(mappedBy = "board", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
     @Builder.Default
     private Set<BoardImage> boardImages = new HashSet<>();
 

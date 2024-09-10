@@ -36,6 +36,13 @@
             <td>[[${board.id}]]</td>
             <td>
                 <a th:href="|@{/board/read(id=${board.id})}&${link}|">[[${board.title}]]</a>[[${board.replyCount}]]
+                <!-- 첨부 이미지 표시 -->
+                <div th:if="${board.boardImageDtos != null && board.boardImageDtos.size() > 0}">
+                    <img th:each="boardImageDto : ${board.boardImageDtos}"
+                         th:src="|/files/view/s_${boardImageDto.uuid}_${boardImageDto.fileName}|"
+                         style="width:100px"
+                    />
+                </div>
             </td>
             <td>[[${board.content}]]</td>
             <td>[[${board.writer}]]</td>

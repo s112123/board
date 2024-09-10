@@ -1,13 +1,17 @@
 package org.demo.board.board.repository;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPQLQuery;
 import lombok.RequiredArgsConstructor;
 import org.demo.board.board.domain.Board;
 import org.demo.board.board.domain.QBoard;
 import org.demo.board.board.domain.QReply;
+import org.demo.board.board.dto.BoardImageDto;
+import org.demo.board.board.dto.BoardListDto;
 import org.demo.board.board.dto.BoardListReplyCountDto;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +19,7 @@ import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class BoardSearchImpl extends QuerydslRepositorySupport implements BoardSearch {
 
@@ -22,12 +27,12 @@ public class BoardSearchImpl extends QuerydslRepositorySupport implements BoardS
         super(Board.class);
     }
 
-    // 게시물 목록에 댓글 수 표시
-    // 현재 Reply (*) - (1) Board 단방향 참조를 하고 있으므로 join 으로 참조한다
-    // 게시물과 댓글의 경우, 한쪽에만 데이터가 존재하는 상황이 발생할 수 있다
-    // 예를 들어, 특정 게시물은 댓글이 없는 경우가 발생하므로 inner join 대신 left (outer) join 을 통해 처리
+    // List<Tuple>을 이용한 방식은 Projections를 이용하는 방식보다 번거롭지만 코드로 커스터마이징 할 수 있다
+    // DTO 와 Domain 간의 변환은 ModelMapper 또는 Projections를 사용한다
+    // 그러나 Board의 Set과 같이 중첩된 구조를 처리할 경우, 직접 튜플(tuple)을 이용해 DTO로 변환하는 것이 편하다
+    // searchAll()은 튜플을 DTO로 변환한다
     @Override
-    public Page<BoardListReplyCountDto> searchAll(String[] types, String keyword, Pageable pageable) {
+    public Page<BoardListDto> searchAll(String[] types, String keyword, Pageable pageable) {
         QBoard board = QBoard.board;
         QReply reply = QReply.reply;
 
@@ -61,30 +66,43 @@ public class BoardSearchImpl extends QuerydslRepositorySupport implements BoardS
             query.where(booleanBuilder);
         }
 
-        // where id > 0
-        query.where(board.id.gt(0L));
-
-        // JPA에서는 Projections 이라는 JPQL의 결과를 바로 DTO로 처리하는 기능을 제공하는 것이 있다
-        // Querydsl도 마찬가지로 이러한 기능을 제공한다
-        // 목록화면에서 필요한 쿼리의 결과를 Projections.bean()을 이용해서 한번에 DTO로 처리할 수 있다
-        // 이를 이용하려면 JPQLQuery 객체의 select()를 이용해야 한다
-        JPQLQuery<BoardListReplyCountDto> dtoQuery = query.select(
-                Projections.bean(
-                        BoardListReplyCountDto.class,
-                        board.id,
-                        board.title,
-                        board.writer,
-                        board.regDate,
-                        reply.count().as("replyCount")
-                )
-        );
-
         // 페이지네이션
-        this.getQuerydsl().applyPagination(pageable, dtoQuery);
+        this.getQuerydsl().applyPagination(pageable, query);
 
-        // 목록조회
-        List<BoardListReplyCountDto> boards = dtoQuery.fetch();
-        long count = dtoQuery.fetchCount();
+        // Tuple → DTO
+        JPQLQuery<Tuple> tupleJPQLQuery = query.select(board, reply.countDistinct());
+        List<Tuple> tuples = tupleJPQLQuery.fetch();
+        List<BoardListDto> boards = tuples.stream().map(tuple -> {
+            Board tempBoard = tuple.get(board);
+            long replyCount = tuple.get(1, Long.class);
+
+            BoardListDto boardListDto = BoardListDto.builder()
+                    .id(tempBoard.getId())
+                    .title(tempBoard.getTitle())
+                    .writer(tempBoard.getWriter())
+                    .content(tempBoard.getContent())
+                    .regDate(tempBoard.getRegDate())
+                    .replyCount(replyCount)
+                    .build();
+
+            // BoardImage를 BoardImageDto로 처리
+            List<BoardImageDto> imageDtos = tempBoard.getBoardImages().stream()
+                    .sorted()
+                    .map(boardImage -> BoardImageDto.builder()
+                            .uuid(boardImage.getUuid())
+                            .fileName(boardImage.getFileName())
+                            .fileIndex(boardImage.getFileIndex())
+                            .build()
+                    )
+                    .collect(Collectors.toList());
+
+            // 처리된 BoardImageDto를 BoardListDto에 추가
+            boardListDto.setBoardImageDtos(imageDtos);
+            return boardListDto;
+        }).collect(Collectors.toList());
+
+        // 목록 개수
+        long count = query.fetchCount();
 
         return new PageImpl<>(boards, pageable, count);
     }

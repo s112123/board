@@ -3,10 +3,7 @@ package org.demo.board.board.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.demo.board.board.domain.Board;
-import org.demo.board.board.dto.BoardDto;
-import org.demo.board.board.dto.BoardListReplyCountDto;
-import org.demo.board.board.dto.PageRequestDto;
-import org.demo.board.board.dto.PageResponseDto;
+import org.demo.board.board.dto.*;
 import org.demo.board.board.repository.BoardRepository;
 import org.demo.board.board.repository.BoardSearch;
 import org.modelmapper.ModelMapper;
@@ -33,18 +30,18 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public PageResponseDto<BoardListReplyCountDto> getBoards(PageRequestDto pageRequestDto) {
+    public PageResponseDto<BoardListDto> getBoards(PageRequestDto pageRequestDto) {
         // 검색조건
         String[] types = pageRequestDto.getTypes();
         String keyword = pageRequestDto.getKeyword();
 
-        // board_id를 기준으로 내림차순 정렬하는 Pageable 생성
+        // 검색조건 및 페이지 처리된 목록
         Pageable pageable = pageRequestDto.getPageable("id");
-        Page<BoardListReplyCountDto> boardDtos = boardRepository.searchAll(types, keyword, pageable);
+        Page<BoardListDto> boardDtos = boardRepository.searchAll(types, keyword, pageable);
 
-        // BoardListReplyCountDto → PageResponseDto<E>
+        // BoardListDto → PageResponseDto<E>
         // withAll(): PageResponseDto 생성자의 매개변수에 인수를 할당한다
-        return PageResponseDto.<BoardListReplyCountDto>withAll()
+        return PageResponseDto.<BoardListDto>withAll()
                 .pageRequestDto(pageRequestDto)
                 .dtoList(boardDtos.getContent())
                 .total((int) boardDtos.getTotalElements())

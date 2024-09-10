@@ -2,10 +2,7 @@ package org.demo.board.board.service;
 
 import org.demo.board.board.domain.Board;
 import org.demo.board.board.domain.BoardImage;
-import org.demo.board.board.dto.BoardDto;
-import org.demo.board.board.dto.BoardListReplyCountDto;
-import org.demo.board.board.dto.PageRequestDto;
-import org.demo.board.board.dto.PageResponseDto;
+import org.demo.board.board.dto.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,11 +12,8 @@ public interface BoardService {
     // 등록하기
     Long addBoard(BoardDto boardDto);
 
-    // 목록조회 + 댓글 수
-    PageResponseDto<BoardListReplyCountDto> getBoards(PageRequestDto pageRequestDto);
-
-    // 목록조회 + 댓글 수
-    //PageResponseDto<BoardListReplyCountDto> getBoardsWithReplyCount(PageRequestDto pageRequestDto);
+    // 목록조회 + 댓글 수 + 이미지
+    PageResponseDto<BoardListDto> getBoards(PageRequestDto pageRequestDto);
 
     // 조회하기
     BoardDto getBoard(Long id);
