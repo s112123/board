@@ -34,7 +34,9 @@
         <tbody th:with="link = ${pageRequestDto.getLink()}">
         <tr th:each="board : ${boards.dtoList}">
             <td>[[${board.id}]]</td>
-            <td><a th:href="|@{/board/read(id=${board.id})}&${link}|">[[${board.title}]]</a></td>
+            <td>
+                <a th:href="|@{/board/read(id=${board.id})}&${link}|">[[${board.title}]]</a>[[${board.replyCount}]]
+            </td>
             <td>[[${board.content}]]</td>
             <td>[[${board.writer}]]</td>
             <td>[[${#temporals.format(board.regDate, 'yyyy-MM-dd HH:mm:ss')}]]</td>
