@@ -23,4 +23,9 @@ public class Reply extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id")
     private Board board;
+
+    // 댓글 내용을 수정하는 메소드
+    public void changeText(String text) {
+        this.text = text;
+    }
 }

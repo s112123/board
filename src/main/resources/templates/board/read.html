@@ -104,7 +104,7 @@
             });
         }, false);
 
-        // 댓글 정보 모달창 닫기
+        // 댓글 정보 모달창 닫기 → 댓글 조회 모달에서 [CLOSE] 버튼 클릭시 댓글 수정 처리
         const btnCloseReply = document.querySelector('.btn-close-reply');
         btnCloseReply.addEventListener('click', function () {
             const readModal = document.querySelector('.modal-read-container');
@@ -240,6 +240,31 @@
                 console.log('exception');
             });
         }, false);
+
+        // 댓글 수정 → 댓글 조회 모달에서 [MODIFY] 버튼 클릭시 댓글 수정 처리
+        const btnModifyReply = document.querySelector('.btn-modify-reply');
+        btnModifyReply.addEventListener('click', function (e) {
+            // ReplyDto 의 변수 이름대로 Key 값을 설정
+            const reply = {
+                id: replyHeader.innerHTML,
+                boardId: boardId,
+                text: modifyReplyText.value
+            };
+
+            console.log(reply);
+
+            modifyReply(reply).then(response => {
+                alert(response.data.id + '번 댓글이 수정되었습니다');
+                modifyReplyText.value = '';
+
+                // 댓글 정보 모달창 닫기
+                const readModal = document.querySelector('.modal-read-container');
+                readModal.style.display = 'none';
+
+                // 수정 후에는 다시 현재페이지의 댓글 목록 갱신
+                getReplies(page, size);
+            });
+        });
     </script>
 </body>
 </html>
