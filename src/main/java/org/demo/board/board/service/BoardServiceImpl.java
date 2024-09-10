@@ -56,4 +56,24 @@ public class BoardServiceImpl implements BoardService {
         BoardDto boardDto = boardToBoardDto(board);
         return boardDto;
     }
+
+    @Override
+    public void modify(BoardDto boardDto) {
+        Optional<Board> optional = boardRepository.findById(boardDto.getId());
+        Board board = optional.orElseThrow();
+
+        // change()를 이용해서 필요한 부분만 수정 처리
+        board.change(boardDto.getTitle(), boardDto.getContent());
+        // 첨부파일 처리
+        board.clearBoardImages();
+
+        if (boardDto.getFileNames() != null) {
+            for (String fileName : boardDto.getFileNames()) {
+                String[] arr = fileName.split("_");
+                board.addBoardImage(arr[0], arr[1]);
+            }
+        }
+
+        boardRepository.save(board);
+    }
 }

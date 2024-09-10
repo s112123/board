@@ -27,7 +27,7 @@
     <!-- 페이지, 검색조건이 유지된 채로 목록에서 조회, 조회에서 목록으로 이동 가능하다 -->
     <div th:with="link = ${pageRequestDto.getLink()}">
         <a th:href="|@{/board/list}?${link}|">BoardList</a>
-        <a th:href="|@{/board/modify(id=${board.id})}?${link}|">Modify</a>
+        <a th:href="|@{/board/modify(id=${board.id})}&${link}|">Modify</a>
     </div>
     <!-- 첨부파일 이미지 표시 -->
     <div th:if="${board.fileNames != null && board.fileNames.size() > 0}">

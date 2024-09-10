@@ -29,4 +29,9 @@ public class BoardImage implements Comparable<BoardImage> {
     public int compareTo(BoardImage boardImage) {
         return this.fileIndex - boardImage.getFileIndex();
     }
+
+    // Board 엔티티 삭제 시에 BoardImage 객체의 참조도 변경하기 위해서 사용한다
+    public void changeBoard(Board board) {
+        this.board = board;
+    }
 }

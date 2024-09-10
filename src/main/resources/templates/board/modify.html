@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>MODIFY</title>
+    <style>
+    .modal-container {
+        background-color: #fff;
+        border: 1px solid grey;
+        position: fixed;
+        top: 0px;
+        left: 0px;
+        display: none;
+    }
+    </style>
+</head>
+<body>
+    <h3>Board Modify</h3>
+    <form th:action="@{/board/modify}" method="post" id="form1">
+        <input type="text" name="id" th:value="${board.id}" readonly />
+        <input type="text" name="title" th:value="${board.title}" />
+        <textarea name="content">[[${board.content}]]</textarea>
+        <input type="text" name="writer" th:value="${board.writer}" readonly />
+        <!-- 첨부파일 추가 -->
+        <div class="upload-hidden">
+            <button type="button" class="btn-add-file">ADD FILE</button>
+        </div>
+        <input type="text" th:value="${#temporals.format(board.regDate, 'yyyy-MM-dd HH:mm:ss')}" readonly />
+        <input type="text" th:value="${#temporals.format(board.modDate, 'yyyy-MM-dd HH:mm:ss')}" readonly />
+        <button type="button" class="btn-list">LIST</button>
+        <button type="button" class="btn-modify">MODIFY</button>
+        <button type="button" class="btn-remove">REMOVE</button>
+    </form>
+    <!-- 첨부파일 이미지 표시 -->
+    <div class="show-images">
+        <th:block th:each="fileName : ${board.fileNames}">
+            <div class="card">
+                <p><img th:src="|/files/view/s_${fileName}|" th:data-src="${fileName}" /></p>
+                <div th:with="arr = ${fileName.split('_')}">
+                    <span>[[${arr[1]}]]</span>
+                    <button class="btn-remove-file" th:onclick="removeFile([[${arr[0]}]], [[${arr[1]}]], this)">X</button>
+                </div>
+            </div>
+        </th:block>
+    </div>
+    <!-- 첨부파일 추가 모달 -->
+    <div class="modal-container">
+        <div class="modal-content">
+            <h3>File Upload</h3>
+            <input type="file" name="files" multiple />
+            <button type="button" class="btn-upload">UPLOAD</button>
+            <button type="button" class="btn-close">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- Javascript -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/js/upload.js"></script>
+    <script th:inline="javascript">
+        const link = [[${pageRequestDto.getLink()}]];
+        const form = document.querySelector('#form1');
+        const uploadImages = document.querySelector('.show-images');
+
+        // @Valid를 통해 검증하여 에러 발생시, 에러 메시지 호출
+        const errors = [[${errors}]];
+        let errorMsg = '';
+        if (errors) {
+            for (let i = 0; i < errors.length; i++) {
+                errorMsg += `${errors[i].field}은(는) ${errors[i].code} \n`;
+            }
+            history.replaceState({}, null, null);
+            alert(errorMsg);
+        }
+
+        // [LIST] 버튼 클릭시, 목록 페이지로 이동
+        const btnList = document.querySelector('.btn-list');
+            btnList.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            form.reset();
+            self.location = `/board/list?${link}`;
+        }, false);
+
+        // [MODIFY] 버튼 클릭시, 수정 처리
+        const btnModify = document.querySelector('.btn-modify');
+        btnModify.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // 첨부파일을 <input type="hidden"> 추가
+            appendFileData();
+
+            // 삭제대상 파일들을 삭제
+            callRemoveFiles();
+
+            // 수정 오류에 대비하여 페이지, 검색조건도 같이 쿼리스트링으로 전달한다
+            form.action = `/board/modify?${link}`;
+            form.method = 'post';
+            form.submit();
+        }, false);
+
+        // 첨부파일을 <input type="hidden">으로 추가
+        function appendFileData() {
+            const target = document.querySelector('.upload-hidden');
+            const uploadFiles = uploadImages.querySelectorAll('img');
+
+            let html = '';
+            for (let i = 0; i < uploadFiles.length; i++) {
+                const uploadFile = uploadFiles[i];
+                const imgLink = uploadFile.getAttribute('data-src');
+                html += `<input type="hidden" name="fileNames" value="${imgLink}" />`;
+            }
+
+            target.innerHTML = html;
+        }
+
+        // 삭제대상 파일들을 삭제
+        function callRemoveFiles() {
+            removeFileList.forEach(({uuid, fileName}) => {
+                removeFileFromServer(uuid, fileName).then(response => {
+                    console.log(response);
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+            });
+        }
+
+        // 삭제될 파일들의 최종목록 ([X]버튼을 눌렀을 땐, 화면만 안보이게 하고 [MODIFY]를 눌렀을때, 서버에서 파일 삭제)
+        // <div class="card"> 태그만 제거
+        const removeFileList = [];
+        function removeFile(uuid, fileName, obj) {
+            if (!confirm("파일을 삭제하시겠습니까?")) {
+                return;
+            }
+
+            removeFileList.push({uuid, fileName});
+            const target = obj.closest('.card');
+            target.remove();
+        }
+
+        // [ADD FILE] 버튼 클릭시, 첨부파일 추가 모달창 열기
+        const btnAddFile = document.querySelector('.btn-add-file');
+        btnAddFile.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const modal = document.querySelector('.modal-container');
+            modal.style.display = 'block';
+        }, false);
+
+        // [CLOSE] 버튼 클릭시, 첨부파일 추가 모달창 닫기
+        const btnClose = document.querySelector('.btn-close');
+        btnClose.addEventListener('click', () => {
+            const modal = document.querySelector('.modal-container');
+            modal.style.display = 'none';
+        });
+
+        // [UPLOAD] 버튼 클릭시, 파일 업로드 (추가)
+        const btnUpload = document.querySelector('.btn-upload');
+        btnUpload.addEventListener('click', function (e) {
+            const formData = new FormData();
+            const files = document.querySelector('input[name="files"]').files;
+
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+
+            uploadToServer(formData).then(response => {
+                for (const result of response.data) {
+                    // <div class="show-images">에 이미지를 표시하는 DOM 추가
+                    showUploadFile(result);
+                }
+
+                // 모달 닫기
+                const modal = document.querySelector('.modal-container');
+                modal.style.display = 'none';
+            })
+            .catch(e => {
+                // 모달 닫기
+                const modal = document.querySelector('.modal-container');
+                modal.style.display = 'none';
+            });
+        }, false);
+
+        // <div class="show-images">에 이미지를 표시하는 DOM 추가
+        function showUploadFile({uuid, fileName, link}) {
+            let html = '';
+            html += '<div class="card">';
+            html += `  <p><img src="/files/view/s_${uuid}_${fileName}" data-src="${uuid + "_" + fileName}" /></p>`;
+            html += `  <div>`;
+            html += `    <span>${fileName}</span>`;
+            html += `    <button class="btn-remove-file"
+                                 onclick="javascript:removeFile('${uuid}', '${fileName}', this)">X</button>`;
+            html += `  </div>`;
+            html += '</div>';
+            uploadImages.innerHTML += html;
+        }
+    </script>
+</body>
+</html>

@@ -54,12 +54,37 @@ public class BoardController {
         return "board/list";
     }
 
-    // 조회하기
-    // PageRequestDto 매개변수는 Thymeleaf에서 getLink() 함수를 사용하기 위함이다
-    @GetMapping("/read")
-    public String read(@RequestParam("id") Long id, PageRequestDto pageRequestDto, Model model) {
+    // 수정 페이지
+    // 경로에 따라 조회 페이지로 이동할 수 있으므로 void로 처리해야 한다
+    @GetMapping({"/read", "/modify"})
+    public void read(@RequestParam("id") Long id, PageRequestDto pageRequestDto, Model model) {
         BoardDto board = boardService.getBoard(id);
         model.addAttribute("board", board);
-        return "board/read";
+    }
+
+    // 수정하기
+    @PostMapping("/modify")
+    public String modify(
+            @Valid BoardDto boardDto,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes,
+            PageRequestDto pageRequestDto
+    ) {
+        // 유효성 검사
+        if (bindingResult.hasErrors()) {
+            // 수정시, 문제가 발생하면 기존의 모든 조건을 원래대로 붙여서 /board/modify 경로로 이동한다
+            String link = pageRequestDto.getLink();
+            redirectAttributes.addFlashAttribute("errors", bindingResult.getAllErrors());
+            redirectAttributes.addAttribute("bno", boardDto.getId());
+            return "redirect:/board/modify?" + link;
+        }
+
+        // 수정이 완료되면 아무런 검색이나 페이징 조건없이 단순히 /board/read 경로로 이동
+        // 목록에서 검색하여 수정한 경우, 수정된 내용과 검색조건이 일치하지 않을 수 있다
+        // 그러므로 조회 페이지를 보여주는 것이 안정적이다
+        boardService.modify(boardDto);
+        redirectAttributes.addFlashAttribute("result", "modified");
+        redirectAttributes.addAttribute("id", boardDto.getId());
+        return "redirect:/board/read";
     }
 }
