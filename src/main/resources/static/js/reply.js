@@ -36,3 +36,9 @@ async function getReply(replyId) {
     const response = await axios.get(`/replies/${replyId}`);
     return response;
 }
+
+// 댓글 수정
+async function modifyReply(reply) {
+    const response = await axios.put(`/replies/${reply.id}`, reply);
+    return response;
+}

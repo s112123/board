@@ -14,4 +14,7 @@ public interface ReplyService {
 
     // 리플 조회하기
     ReplyDto read(Long id);
+
+    // 리플 수정하기
+    void modify(ReplyDto replyDto);
 }

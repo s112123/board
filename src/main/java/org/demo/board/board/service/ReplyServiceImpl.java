@@ -57,4 +57,14 @@ public class ReplyServiceImpl implements ReplyService {
         Reply reply = optional.orElseThrow();
         return modelMapper.map(reply, ReplyDto.class);
     }
+
+    // @Transactional 이 없으므로 Transaction 안에서 동작하지 않아 변경감지는 발생하지 않는다
+    // 그러므로 save() 로 저장한다
+    @Override
+    public void modify(ReplyDto replyDto) {
+        Optional<Reply> optional = replyRepository.findById(replyDto.getId());
+        Reply reply = optional.orElseThrow();
+        reply.changeText(replyDto.getText());
+        replyRepository.save(reply);
+    }
 }

@@ -60,4 +60,18 @@ public class ReplyController {
         ReplyDto replyDto = replyService.read(id);
         return replyDto;
     }
+
+    // 수정하기
+    // 수정할 때도 등록과 마찬가지로 JSON 문자열이 전송되므로 이를 처리하도록 @RequestBody를 적용한다
+    // REST API 테스트 도구로 테스트하는 경우: {"text": "댓글수정내용"}
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Long> modify(@PathVariable("id") Long id, @RequestBody ReplyDto replyDto) {
+        // 댓글 ID를 일치시킴
+        replyDto.setId(id);
+        replyService.modify(replyDto);
+
+        Map<String, Long> map = new HashMap<>();
+        map.put("id", id);
+        return map;
+    }
 }
