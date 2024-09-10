@@ -67,4 +67,9 @@ public class ReplyServiceImpl implements ReplyService {
         reply.changeText(replyDto.getText());
         replyRepository.save(reply);
     }
+
+    @Override
+    public void remove(Long id) {
+        replyRepository.deleteById(id);
+    }
 }

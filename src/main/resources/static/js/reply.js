@@ -42,3 +42,9 @@ async function modifyReply(reply) {
     const response = await axios.put(`/replies/${reply.id}`, reply);
     return response;
 }
+
+// 댓글 삭제
+async function removeReply(replyId) {
+    const response = await axios.delete(`/replies/${replyId}`);
+    return response.data;
+}

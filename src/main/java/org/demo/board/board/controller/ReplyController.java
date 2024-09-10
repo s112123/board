@@ -74,4 +74,15 @@ public class ReplyController {
         map.put("id", id);
         return map;
     }
+
+    // 삭제하기
+    // 존재하지 않는 댓글 번호를 삭제하는 경우, EmptyResultDataAccessException 예외 발생 → CustomRestAdvice
+    @DeleteMapping("/{id}")
+    public Map<String, Long> remove(@PathVariable("id") Long id) {
+        replyService.remove(id);
+
+        Map<String, Long> map = new HashMap<>();
+        map.put("id", id);
+        return map;
+    }
 }

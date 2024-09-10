@@ -251,8 +251,7 @@
                 text: modifyReplyText.value
             };
 
-            console.log(reply);
-
+            // 댓글 수정 처리
             modifyReply(reply).then(response => {
                 alert(response.data.id + '번 댓글이 수정되었습니다');
                 modifyReplyText.value = '';
@@ -265,6 +264,25 @@
                 getReplies(page, size);
             });
         });
+
+        // 댓글 삭제 → 댓글 조회 모달에서 [REMOVE] 버튼 클릭시 댓글 삭제 처리
+        const btnRemoveReply = document.querySelector('.btn-remove-reply');
+        btnRemoveReply.addEventListener('click', (e) => {
+            removeReply(replyHeader.innerHTML).then(response => {
+                alert(response.id + '번 댓글이 삭제되었습니다');
+
+                // 댓글 정보 모달창 닫기
+                const readModal = document.querySelector('.modal-read-container');
+                readModal.style.display = 'none';
+
+                // 1 페이지로 갱신. 만약, 이 부분이 없다면 현재 페이지 갱신한다
+                page = 1;
+                getReplies(page, size);
+            })
+            .catch(e => {
+                console.log(e);
+            });
+        }, false);
     </script>
 </body>
 </html>
